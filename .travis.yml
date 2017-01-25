@@ -21,10 +21,10 @@ deploy:
     condition: $TOXENV == py36
     repo: keithschulze/pyome
     tags: true
-env:
-- TOXENV=py27
-- TOXENV=py35
-- TOXENV=py36
-install: pip install -U tox
+install: pip install -U tox-travis
 language: python
-script: tox -e {TOXENV}
+python:
+- "2.7"
+- "3.5"
+- "3.6"
+script: tox

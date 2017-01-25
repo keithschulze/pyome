@@ -17,6 +17,7 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'numpy>=1.9',
     'scipy>=0.15',
+    'Cython>=0.25.2',
     'javabridge==1.0.15',
     'python-bioformats>=1.0.8'
 ]
@@ -26,6 +27,7 @@ test_requirements = [
     'nose>=1.3',
     'numpy>=1.9',
     'scipy>=0.15',
+    'Cython>=0.25.2',
     'javabridge==1.0.15',
     'python-bioformats>=1.0.8'
 ]
