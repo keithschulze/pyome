@@ -18,11 +18,17 @@ Python library for interacting with OME image metadata
 * Free software: MIT license
 * Documentation: https://pyome.readthedocs.org.
 
+Current status
+--------------
+
+Pre-alpha: Just a exploration to see whether the approach works.
+
 Features
 --------
 
-* Read OME metadata files.
-* TODO
+* Lazily read OME metadata for each series in an image file.
+* TODO:
+  * Write OME metadata
 
 Credits
 ---------

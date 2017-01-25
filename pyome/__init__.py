@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals, absolute_import
+"""OME module for interacting with OME image metadata"""
 
-import bioformats
+from __future__ import print_function, unicode_literals, absolute_import
 from collections import namedtuple
 from xml.etree import ElementTree as et
+
+import bioformats
 from pyome.utils import _bool, _int, _float
 
 
@@ -20,6 +22,8 @@ class OMEImageMetadata(
                     'voxel_size_x', 'voxel_unit_x', 'voxel_size_y',
                     'voxel_unit_y', 'voxel_size_z', 'voxel_unit_z',
                     'time_increment', 'time_unit', 'channels', 'planes'])):
+    """OMEImageMetadata class that wraps a namedtuple containing OME metadata.
+    Provides an _asdict method to recursively convert to a dictionary."""
 
     __slots__ = ()
 
@@ -44,7 +48,7 @@ class OMEImageMetadata(
         >>> import bioformats
         >>> import pyome as ome
         >>> javabridge.start_vm(class_path=bioformats.JARS)
-        >>> meta = ome.read("./tests/data/decon.dv")
+        >>> meta = ome.read("./tests/data/decon.ome.xml")
         >>> [series_meta._asdict() for series_meta in meta]
         """
         meta_dict = super(OMEImageMetadata, self)._asdict()
@@ -108,6 +112,7 @@ class _OMEMetadataReader(object):
         return self.next()
 
     def next(self):
+        """next method to support Python 2.7"""
         if self._num < self._nseries:
             series_meta = _OMEMetadataReader\
                             ._extract_image_metdata(self._series[self._num],
@@ -124,127 +129,78 @@ class _OMEMetadataReader(object):
         return {'ome': ome_ns, 'sa': sa_ns}
 
     @classmethod
-    def _extract_image_metdata(cls, series_node, ns):
-        s_id = series_node.get('ID')
-        s_name = series_node.get('Name', None)
-        pixels = series_node.find('ome:Pixels', ns)
-        p_id = pixels.get("ID")
-        p_type = pixels.get("Type")
-        p_dim_order = pixels.get("DimensionOrder")
-        p_interleaved = _bool(pixels.get("Interleaved", None))
-        p_be = _bool(pixels.get("BigEndian", None))
-        p_sig_bits = _int(pixels.get("SignificantBits", None))
-        p_sizex = _int(pixels.get("SizeX"))
-        p_sizey = _int(pixels.get("SizeY"))
-        p_sizez = _int(pixels.get("SizeZ"))
-        p_sizec = _int(pixels.get("SizeC"))
-        p_sizet = _int(pixels.get("SizeT"))
-        p_vox_sizex = _float(pixels.get("PhysicalSizeX", None))
-        p_vox_unitx = pixels.get("PhysicalSizeXUnit", "µm")
-        p_vox_sizey = _float(pixels.get("PhysicalSizeY", None))
-        p_vox_unity = pixels.get("PhysicalSizeYUnit", "µm")
-        p_vox_sizez = _float(pixels.get("PhysicalSizeZ", None))
-        p_vox_unitz = pixels.get("PhysicalSizeZUnit", "µm")
-        p_time_increment = _float(pixels.get("TimeIncrement", None))
-        p_time_unit = pixels.get("TimeIncrementUnit", "s")
-        channels = [_OMEMetadataReader._extract_channel_meta(c)
-                    for c in pixels.findall('ome:Channel', ns)]
-        planes = [_OMEMetadataReader._extract_plane_metadata(p)
-                  for p in pixels.findall('ome:Plane', ns)]
+    def _extract_image_metdata(cls, series_node, namespace):
+        pixels = series_node.find('ome:Pixels', namespace)
 
-        return OMEImageMetadata(id=s_id,
-                                name=s_name,
-                                pixel_id=p_id,
-                                dimension_order=p_dim_order,
-                                pixel_type=p_type,
-                                significant_bits=p_sig_bits,
-                                interleaved=p_interleaved,
-                                big_endian=p_be,
-                                sizex=p_sizex,
-                                sizey=p_sizey,
-                                sizez=p_sizez,
-                                sizec=p_sizec,
-                                sizet=p_sizet,
-                                voxel_size_x=p_vox_sizex,
-                                voxel_unit_x=p_vox_unitx,
-                                voxel_size_y=p_vox_sizey,
-                                voxel_unit_y=p_vox_unity,
-                                voxel_size_z=p_vox_sizez,
-                                voxel_unit_z=p_vox_unitz,
-                                time_increment=p_time_increment,
-                                time_unit=p_time_unit,
-                                channels=channels,
-                                planes=planes)
+        return OMEImageMetadata(
+            id=series_node.get('ID'),
+            name=series_node.get('Name', None),
+            pixel_id=pixels.get("ID"),
+            dimension_order=pixels.get("DimensionOrder"),
+            pixel_type=pixels.get("Type"),
+            significant_bits=_int(pixels.get("SignificantBits", None)),
+            interleaved=_bool(pixels.get("Interleaved", None)),
+            big_endian=_bool(pixels.get("BigEndian", None)),
+            sizex=_int(pixels.get("SizeX")),
+            sizey=_int(pixels.get("SizeY")),
+            sizez=_int(pixels.get("SizeZ")),
+            sizec=_int(pixels.get("SizeC")),
+            sizet=_int(pixels.get("SizeT")),
+            voxel_size_x=_float(pixels.get("PhysicalSizeX", None)),
+            voxel_unit_x=pixels.get("PhysicalSizeXUnit", "µm"),
+            voxel_size_y=_float(pixels.get("PhysicalSizeY", None)),
+            voxel_unit_y=pixels.get("PhysicalSizeYUnit", "µm"),
+            voxel_size_z=_float(pixels.get("PhysicalSizeZ", None)),
+            voxel_unit_z=pixels.get("PhysicalSizeZUnit", "µm"),
+            time_increment=_float(pixels.get("TimeIncrement", None)),
+            time_unit=pixels.get("TimeIncrementUnit", "s"),
+            channels=[_OMEMetadataReader._extract_channel_meta(c)
+                      for c in pixels.findall('ome:Channel', namespace)],
+            planes=[_OMEMetadataReader._extract_plane_metadata(p)
+                    for p in pixels.findall('ome:Plane', namespace)])
 
     @classmethod
     def _extract_channel_meta(cls, channel_node):
-        c_id = channel_node.get("ID")
-        c_name = channel_node.get("Name", None)
-        c_spp = _int(channel_node.get("SamplesPerPixel", None))
-        c_ill_type = channel_node.get("IlluminationType", None)
-        c_pinhole_size = _float(channel_node.get("PinholeSize", None))
-        c_pinhole_unit = channel_node.get("PinholeSizeUnit", "µm")
-        c_acq_mode = channel_node.get("AcquisitionMode", None)
-        c_contrast_method = channel_node.get("ContrastMethod", None)
-        c_ex_wl = _float(channel_node.get("ExcitationWavelength", None))
-        c_ex_unit = channel_node.get("ExcitationWavelengthUnit", "nm")
-        c_em_wl = _float(channel_node.get("EmissionWavelength", None))
-        c_em_unit = channel_node.get("EmissionWavelengthUnit", "nm")
-        c_fluor = channel_node.get("Fluor", None)
-        c_nd_filter = _float(channel_node.get("NDFilter", None))
-        c_pocket_cell = _int(channel_node.get("PocketCellSetting", None))
-        c_color = channel_node.get("Color", "-1")
-
-        return OMEChannelMetadata(id=c_id,
-                                  name=c_name,
-                                  samples_per_pixel=c_spp,
-                                  illumination_type=c_ill_type,
-                                  pinhole_size=c_pinhole_size,
-                                  pinhole_size_unit=c_pinhole_unit,
-                                  acquisition_mode=c_acq_mode,
-                                  contrast_method=c_contrast_method,
-                                  excitation_wavelength=c_ex_wl,
-                                  excitation_unit=c_ex_unit,
-                                  emission_wavelength=c_em_wl,
-                                  emission_unit=c_em_unit,
-                                  fluor=c_fluor,
-                                  nd_filter=c_nd_filter,
-                                  pockel_cell=c_pocket_cell,
-                                  color=c_color)
+        return OMEChannelMetadata(
+            id=channel_node.get("ID"),
+            name=channel_node.get("Name", None),
+            samples_per_pixel=_int(channel_node.get("SamplesPerPixel", None)),
+            illumination_type=channel_node.get("IlluminationType", None),
+            pinhole_size=_float(channel_node.get("PinholeSize", None)),
+            pinhole_size_unit=channel_node.get("PinholeSizeUnit", "µm"),
+            acquisition_mode=channel_node.get("AcquisitionMode", None),
+            contrast_method=channel_node.get("ContrastMethod", None),
+            excitation_wavelength=_float(
+                channel_node.get("ExcitationWavelength", None)),
+            excitation_unit=channel_node.get("ExcitationWavelengthUnit", "nm"),
+            emission_wavelength=_float(
+                channel_node.get("EmissionWavelength", None)),
+            emission_unit=channel_node.get("EmissionWavelengthUnit", "nm"),
+            fluor=channel_node.get("Fluor", None),
+            nd_filter=_float(channel_node.get("NDFilter", None)),
+            pockel_cell=_int(channel_node.get("PocketCellSetting", None)),
+            color=channel_node.get("Color", "-1"))
 
     @classmethod
     def _extract_plane_metadata(cls, plane_node):
-        p_c = _int(plane_node.get("TheC"))
-        p_t = _int(plane_node.get("TheT"))
-        p_z = _int(plane_node.get("TheZ"))
-        p_time_int = _float(plane_node.get("DeltaT", None))
-        p_time_unit = plane_node.get("DeltaTUnit", "s")
-        p_exp_time = _float(plane_node.get("ExposureTime", None))
-        p_exp_unit = plane_node.get("ExposureTimeUnit", "s")
-        p_stage_x = _float(plane_node.get("PositionX", None))
-        p_stage_x_unit = plane_node.get("PositionXUnit", "reference frame")
-        p_stage_y = _float(plane_node.get("PositionY", None))
-        p_stage_y_unit = plane_node.get("PositionYUnit", "reference frame")
-        p_stage_z = _float(plane_node.get("PositionZ", None))
-        p_stage_z_unit = plane_node.get("PositionZUnit", "reference frame")
-
-        return OMEPlaneMetadata(c=p_c,
-                                t=p_t,
-                                z=p_z,
-                                time_interval=p_time_int,
-                                time_unit=p_time_unit,
-                                exposure_time=p_exp_time,
-                                exposure_time_unit=p_exp_unit,
-                                stage_x=p_stage_x,
-                                stage_x_unit=p_stage_x_unit,
-                                stage_y=p_stage_y,
-                                stage_y_unit=p_stage_y_unit,
-                                stage_z=p_stage_z,
-                                stage_z_unit=p_stage_z_unit)
+        return OMEPlaneMetadata(
+            c=_int(plane_node.get("TheC")),
+            t=_int(plane_node.get("TheT")),
+            z=_int(plane_node.get("TheZ")),
+            time_interval=_float(plane_node.get("DeltaT", None)),
+            time_unit=plane_node.get("DeltaTUnit", "s"),
+            exposure_time=_float(plane_node.get("ExposureTime", None)),
+            exposure_time_unit=plane_node.get("ExposureTimeUnit", "s"),
+            stage_x=_float(plane_node.get("PositionX", None)),
+            stage_x_unit=plane_node.get("PositionXUnit", "reference frame"),
+            stage_y=_float(plane_node.get("PositionY", None)),
+            stage_y_unit=plane_node.get("PositionYUnit", "reference frame"),
+            stage_z=_float(plane_node.get("PositionZ", None)),
+            stage_z_unit=plane_node.get("PositionZUnit", "reference frame"))
 
 
 def read(path):
-    """Read OME metadata. This method effectively return a generator
+    """Read OME metadata. This method effectively returns an iterator
     that can be used to iterate through each series in an image file
     and access the OME metadata for that series.
 
@@ -255,7 +211,7 @@ def read(path):
 
     Returns
     -------
-    meta : Generator of namedtuples representing the OME metadata
+    meta : Iterator of namedtuples representing the OME metadata
 
 
     Examples
@@ -264,12 +220,12 @@ def read(path):
     >>> import bioformats
     >>> javabridge.start_vm(class_path=bioformats.JARS)
     >>> import pyome as ome
-    >>> meta = ome.read("./tests/data/decon.dv")
+    >>> meta = ome.read("./tests/data/decon.ome.xml")
     >>> for m in meta:
-    ...     print m.id
-    ...     print m.name
-    ...     print m.sizex
-    ...     print m.sizey
+    ...     print(m.id)
+    ...     print(m.name)
+    ...     print(m.sizex)
+    ...     print(m.sizey)
     ...
     Image:0
     decon.dv
