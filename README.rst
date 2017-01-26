@@ -8,11 +8,6 @@ pyome
 .. image:: https://img.shields.io/travis/keithschulze/pyome.svg
         :target: https://travis-ci.org/keithschulze/pyome
 
-.. image:: https://readthedocs.org/projects/pyome/badge/?version=latest
-        :target: https://readthedocs.org/projects/pyome/?badge=latest
-        :alt: Documentation Status
-
-
 Python library for interacting with OME image metadata
 
 * Free software: MIT license
