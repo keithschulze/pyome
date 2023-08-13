@@ -1,12 +1,8 @@
+**Note:** This repository is now archived and not actively maintained.
+
 ===============================
 pyome
 ===============================
-
-.. image:: https://img.shields.io/pypi/v/pyome.svg
-        :target: https://pypi.python.org/pypi/pyome
-
-.. image:: https://img.shields.io/travis/keithschulze/pyome.svg
-        :target: https://travis-ci.org/keithschulze/pyome
 
 Python library for interacting with OME image metadata
 
